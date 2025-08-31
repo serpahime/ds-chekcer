@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discord Checker — Анализ профилей</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <i class="fab fa-discord"></i>
+        <span>Discord Checker</span>
+      </div>
+    </div>
+    
+    <div class="sidebar-menu">
+      <a href="#" class="menu-item active" data-action="home">
+        <i class="fas fa-home"></i>
+        <span>Главная</span>
+      </a>
+      <a href="#" class="menu-item" data-action="search">
+        <i class="fas fa-search"></i>
+        <span>Поиск</span>
+      </a>
+      <a href="#" class="menu-item" data-action="analytics">
+        <i class="fas fa-chart-line"></i>
+        <span>Аналитика</span>
+      </a>
+      <a href="#" class="menu-item" data-action="tracking">
+        <i class="fas fa-users"></i>
+        <span>Отслеживание</span>
+      </a>
+      <a href="#" class="menu-item" data-action="archive">
+        <i class="fas fa-archive"></i>
+        <span>Архив</span>
+      </a>
+      <a href="#" class="menu-item" data-action="servers">
+        <i class="fas fa-server"></i>
+        <span>Сервера</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="search-container">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="discord-search" placeholder="Введите Discord ID (18-19 цифр)..." pattern="[0-9]{18,19}" maxlength="19">
+          <button type="button" id="search-btn">
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+        <div class="search-hint">
+          <small>Discord ID можно найти, включив режим разработчика в Discord и кликнув правой кнопкой по пользователю</small>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button class="notification-btn" id="notification-btn" style="display: none;">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge">0</span>
+        </button>
+        
+        <!-- Login Button (when not authenticated) -->
+        <button class="btn btn-primary" id="login-btn" onclick="loginWithDiscord()">
+          <i class="fab fa-discord"></i>
+          Войти через Discord
+        </button>
+        
+        <!-- User Profile (when authenticated) -->
+        <div class="user-profile" id="user-profile" style="display: none;">
+          <img id="user-avatar-header" src="" alt="User Avatar">
+          <span id="user-name">Загрузка...</span>
+          <i class="fas fa-chevron-down"></i>
+          
+          <!-- User Dropdown Menu -->
+          <div class="user-dropdown" id="user-dropdown">
+            <div class="dropdown-item" onclick="showProfile()">
+              <i class="fas fa-user"></i>
+              Профиль
+            </div>
+            <div class="dropdown-item" onclick="showSettings()">
+              <i class="fas fa-cog"></i>
+              Настройки
+            </div>
+            <div class="dropdown-item" onclick="showTracking()">
+              <i class="fas fa-users"></i>
+              Отслеживание
+            </div>
+            <div class="dropdown-separator"></div>
+            <div class="dropdown-item" onclick="logout()">
+              <i class="fas fa-sign-out-alt"></i>
+              Выйти
+            </div>
+      </div>
+    </div>
+    </div>
+  </header>
+
+    <!-- User Profile Section -->
+    <section class="profile-section" id="profile-section" style="display: none;">
+      <div class="profile-modern">
+        <div class="profile-row-main">
+          <div class="profile-avatar-wrap">
+            <img id="user-avatar-profile" class="profile-avatar-modern" src="" alt="Avatar">
+            <div class="profile-status-indicator" id="profile-status-indicator"></div>
+          </div>
+          <div class="profile-main-info">
+            <div class="profile-main-top">
+              <span id="username" class="profile-username-modern">Имя</span>
+              <span id="user-tag" class="profile-tag-modern">#0000</span>
+              <span id="user-clan" class="profile-clan-modern"></span>
+              <button id="track-btn" class="btn btn-track-modern">
+                <i class="fas fa-plus"></i>
+                Добавить в отслеживание
+              </button>
+              <span class="profile-reputation-badge" id="profile-reputation-badge">
+                <span class="reputation-icon" id="reputation-emoji">⭐</span>
+                <span class="reputation-value" id="reputation-value">0</span>
+                <button class="rep-btn rep-btn-inline up" id="reputation-upvote" title="Повысить репутацию">
+                  <i class="fas fa-arrow-up"></i>
+                </button>
+                <button class="rep-btn rep-btn-inline down" id="reputation-downvote" title="Понизить репутацию">
+                  <i class="fas fa-arrow-down"></i>
+                </button>
+                <span class="reputation-cooldown" id="reputation-cooldown" style="display:none;"></span>
+              </span>
+              
+              <span class="profile-views-badge" id="profile-views-badge">
+                <span class="views-icon" id="views-emoji">👁️</span>
+                <span class="views-value" id="views-count">0</span> просмотров
+                <span class="views-cooldown" id="views-cooldown" style="display:none;"></span>
+              </span>
+            </div>
+            <div id="user-bio" class="profile-bio-modern">Описание не указано</div>
+          </div>
+        </div>
+        <div class="profile-quick-stats-modern">
+          <div class="stat-item-modern">
+            <i class="fas fa-eye"></i> 
+            <span id="profile-views-count">0</span> просмотров
+          </div>
+          <div class="stat-item-modern">
+            <i class="fas fa-clock"></i> 
+            <span id="account-age">0</span> дней
+          </div>
+          <div class="stat-item-modern">
+            <i class="fas fa-microphone"></i> 
+            <span id="voice-time">0ч</span> в голосе
+          </div>
+          <div class="stat-item-modern">
+            <i class="fas fa-comment"></i> 
+            <span id="message-count">0</span> сообщений
+          </div>
+          <div class="stat-item-modern">
+            <i class="fas fa-hashtag"></i> 
+            <span id="user-channel">Не в сети</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Risk Assessment Section -->
+      <div class="risk-assessment-section">
+        <div class="section-header">
+          <h3>Оценка риска</h3>
+          <div class="risk-score-display">
+            <span class="risk-score-label">Уровень риска:</span>
+            <span class="risk-score-value" id="risk-score-display">20</span>
+          </div>
+        </div>
+        <div class="risk-indicators">
+          <div class="risk-indicator">
+            <i class="fas fa-exclamation-triangle text-warning"></i>
+            <span>Низкая активность</span>
+          </div>
+          <div class="risk-indicator">
+            <i class="fas fa-check-circle text-success"></i>
+            <span>Стабильный аккаунт</span>
+          </div>
+        </div>
+        <div class="risk-meter">
+          <div class="risk-bar">
+            <div class="risk-fill" id="risk-fill" style="width: 20%"></div>
+          </div>
+          <div class="risk-labels">
+            <span>Низкий</span>
+            <span>Средний</span>
+            <span>Высокий</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard" id="dashboard" style="display: none;">
+
+      <!-- Activity Tabs -->
+      <div class="activity-tabs">
+        <div class="tab-buttons">
+          <button class="tab-btn active" data-tab="overview">
+            <i class="fas fa-chart-pie"></i>
+            Обзор
+          </button>
+          <button class="tab-btn" data-tab="presence">
+            <i class="fas fa-clock"></i>
+            Онлайн
+          </button>
+          <button class="tab-btn" data-tab="messages">
+            <i class="fas fa-comments"></i>
+            Сообщения
+          </button>
+          <button class="tab-btn" data-tab="voice">
+            <i class="fas fa-microphone"></i>
+            Голос
+          </button>
+          <button class="tab-btn" data-tab="names">
+            <i class="fas fa-tag"></i>
+            Никнеймы
+          </button>
+          <button class="tab-btn" data-tab="avatars">
+            <i class="fas fa-image"></i>
+            Аватары
+          </button>
+  </div>
+
+        <div class="tab-content">
+          <div id="overview" class="tab-panel active">
+            <div class="activity-grid">
+              <div class="activity-card">
+                <h3>Активность по дням</h3>
+                <div class="activity-chart" id="activity-chart">
+                  <div class="chart-placeholder">График активности</div>
+                </div>
+              </div>
+              <div class="activity-card">
+                <h3>Популярные сервера</h3>
+                <div class="server-list" id="server-list">
+                  <div class="server-item">
+                    <div class="server-icon">ZXC</div>
+                    <div class="server-info">
+                      <span class="server-name">ZXC Server</span>
+                      <span class="server-activity">Активен сейчас</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+  </div>
+
+          <div id="presence" class="tab-panel">
+            <div class="presence-chart">
+              <h3>Время онлайн по дням недели</h3>
+              <div class="chart-container" id="presence-chart">
+                <div class="chart-placeholder">График онлайн активности</div>
+              </div>
+            </div>
+  </div>
+
+          <div id="messages" class="tab-panel">
+            <div class="messages-stats">
+              <h3>Статистика сообщений</h3>
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <span class="stat-number">1,247</span>
+                  <span class="stat-label">Всего сообщений</span>
+                </div>
+                <div class="stat-card">
+                  <span class="stat-number">89</span>
+                  <span class="stat-label">За последние 7 дней</span>
+                </div>
+              </div>
+            </div>
+  </div>
+
+          <div id="voice" class="tab-panel">
+            <div class="voice-stats">
+              <h3>Голосовая активность</h3>
+              <div class="voice-metrics">
+                <div class="metric-item">
+                  <i class="fas fa-microphone"></i>
+                  <span>Общее время: 544ч 52м</span>
+                </div>
+                <div class="metric-item">
+                  <i class="fas fa-calendar-day"></i>
+                  <span>В среднем: 5ч 9м в день</span>
+                </div>
+              </div>
+            </div>
+  </div>
+
+          <div id="names" class="tab-panel">
+            <div class="names-history">
+    <h3>История никнеймов</h3>
+              <div class="names-timeline" id="names-timeline">
+                <div class="timeline-item">
+                  <div class="timeline-date">15 мая 2025</div>
+                  <div class="timeline-content">4skillzz</div>
+                </div>
+              </div>
+            </div>
+  </div>
+
+          <div id="avatars" class="tab-panel">
+            <div class="avatars-gallery">
+    <h3>История аватаров</h3>
+              <div class="avatars-grid" id="avatars-grid">
+                <div class="avatar-item">
+                  <img src="https://i.pravatar.cc/100?img=1" alt="Avatar 1">
+                  <span class="avatar-date">15 мая 2025</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Welcome Screen -->
+    <div class="welcome-screen" id="welcome-screen">
+      <div class="welcome-content">
+        <div class="welcome-icon">
+          <i class="fab fa-discord"></i>
+        </div>
+        <h1>Добро пожаловать в Discord Checker</h1>
+        <p>Анализируйте профили пользователей Discord с помощью их уникального ID</p>
+        
+        <div class="welcome-instructions">
+          <h3>Как найти Discord ID?</h3>
+          <div class="instruction-steps">
+            <div class="step">
+              <div class="step-number">1</div>
+              <div class="step-content">
+                <strong>Включите режим разработчика</strong>
+                <span>Настройки Discord → Расширенные → Режим разработчика</span>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-number">2</div>
+              <div class="step-content">
+                <strong>Кликните правой кнопкой</strong>
+                <span>По имени пользователя в Discord</span>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-number">3</div>
+              <div class="step-content">
+                <strong>Выберите "Копировать ID"</strong>
+                <span>ID будет скопирован в буфер обмена</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="search-example">
+          <span>Пример Discord ID: 123456789012345678</span>
+        </div>
+        
+        <div class="auth-required" id="auth-required">
+          <div class="auth-notice">
+            <i class="fas fa-lock"></i>
+            <h3>Войдите через Discord для доступа к функциям</h3>
+            <p>После входа вы сможете отслеживать пользователей, сохранять заметки и получать уведомления</p>
+            <button class="btn btn-primary" onclick="loginWithDiscord()">
+              <i class="fab fa-discord"></i>
+              Войти через Discord
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Home Dashboard -->
+    <div class="home-dashboard" id="home-dashboard" style="display: none;">
+      <!-- Hero Section -->
+      <div class="hero-section">
+        <div class="hero-content">
+          <div class="hero-text">
+            <h1 class="hero-title">
+              <span class="gradient-text">Discord Checker</span>
+              <span class="hero-subtitle">Анализ профилей в реальном времени</span>
+            </h1>
+            <p class="hero-description">
+              Отслеживайте активность, анализируйте поведение и получайте уведомления о важных событиях
+            </p>
+            <div class="hero-stats">
+              <div class="stat-item">
+                <div class="stat-number" id="total-users">0</div>
+                <div class="stat-label">Пользователей отслеживается</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number" id="total-searches">0</div>
+                <div class="stat-label">Поисковых запросов</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number" id="high-risk-users">0</div>
+                <div class="stat-label">Высокий риск</div>
+              </div>
+            </div>
+          </div>
+          <div class="hero-visual">
+            <div class="floating-cards">
+              <div class="floating-card card-1">
+                <i class="fas fa-user-shield"></i>
+                <span>Безопасность</span>
+              </div>
+              <div class="floating-card card-2">
+                <i class="fas fa-chart-line"></i>
+                <span>Аналитика</span>
+              </div>
+              <div class="floating-card card-3">
+                <i class="fas fa-bell"></i>
+                <span>Уведомления</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions-section">
+        <h2>Быстрые действия</h2>
+        <div class="quick-actions-grid">
+          <div class="action-card" onclick="showSearch()">
+            <div class="action-icon">
+              <i class="fas fa-search"></i>
+            </div>
+            <h3>Поиск пользователя</h3>
+            <p>Найдите профиль по Discord ID</p>
+            <div class="action-hint">Ctrl + K</div>
+          </div>
+          <div class="action-card" onclick="showTracking()">
+            <div class="action-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <h3>Отслеживание</h3>
+            <p>Управляйте списком отслеживания</p>
+            <div class="action-hint">Активных: <span id="tracking-count">0</span></div>
+          </div>
+          <div class="action-card" onclick="showDashboard()">
+            <div class="action-icon">
+              <i class="fas fa-chart-bar"></i>
+            </div>
+            <h3>Аналитика</h3>
+            <p>Просмотр статистики и отчетов</p>
+            <div class="action-hint">Детальная статистика</div>
+          </div>
+          <div class="action-card" onclick="showSettings()">
+            <div class="action-icon">
+              <i class="fas fa-cog"></i>
+            </div>
+            <h3>Настройки</h3>
+            <p>Персонализация приложения</p>
+            <div class="action-hint">Тема, уведомления</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="recent-activity-section">
+        <h2>Последняя активность</h2>
+        <div class="activity-timeline" id="activity-timeline">
+          <div class="timeline-item">
+            <div class="timeline-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="timeline-content">
+              <h4>Добро пожаловать!</h4>
+              <p>Начните работу с поиска пользователей</p>
+              <span class="timeline-time">Сейчас</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features Showcase -->
+      <div class="features-section">
+        <h2>Возможности платформы</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3>Безопасность</h3>
+            <p>Защищенная аутентификация через Discord OAuth2</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-database"></i>
+            </div>
+            <h3>База данных</h3>
+            <p>Надежное хранение данных в MongoDB</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h3>Адаптивность</h3>
+            <p>Работает на всех устройствах</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-sync"></i>
+            </div>
+            <h3>Реальное время</h3>
+            <p>Обновление данных в реальном времени</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Status -->
+      <div class="system-status-section">
+        <h2>Статус системы</h2>
+        <div class="status-grid">
+          <div class="status-card" id="server-status">
+            <div class="status-icon">
+              <i class="fas fa-server"></i>
+            </div>
+            <div class="status-info">
+              <h4>Сервер</h4>
+              <span class="status-text">Проверка...</span>
+            </div>
+          </div>
+          <div class="status-card" id="database-status">
+            <div class="status-icon">
+              <i class="fas fa-database"></i>
+            </div>
+            <div class="status-info">
+              <h4>База данных</h4>
+              <span class="status-text">Проверка...</span>
+            </div>
+          </div>
+          <div class="status-card" id="discord-status">
+            <div class="status-icon">
+              <i class="fab fa-discord"></i>
+            </div>
+            <div class="status-info">
+              <h4>Discord API</h4>
+              <span class="status-text">Проверка...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Dashboard (when authenticated) -->
+    <div class="user-dashboard" id="user-dashboard" style="display: none;">
+      <!-- User Profile Section -->
+      <div class="dashboard-section">
+        <div class="section-header">
+          <h2>Мой профиль</h2>
+          <button class="btn btn-outline" onclick="editProfile()">
+            <i class="fas fa-edit"></i>
+            Редактировать
+          </button>
+        </div>
+        <div class="user-profile-info" id="user-profile-info">
+          <!-- User info will be loaded here -->
+        </div>
+      </div>
+
+      <!-- Tracking Overview -->
+      <div class="dashboard-section">
+        <div class="section-header">
+          <h2>Обзор отслеживания</h2>
+          <button class="btn btn-primary" onclick="showTracking()">
+            <i class="fas fa-users"></i>
+            Управление
+          </button>
+        </div>
+        <div class="tracking-overview" id="tracking-overview">
+          <!-- Tracking stats will be loaded here -->
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="dashboard-section">
+        <div class="section-header">
+          <h2>Последняя активность</h2>
+        </div>
+        <div class="recent-activity" id="recent-activity">
+          <!-- Recent activity will be loaded here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Tracking Management -->
+    <div class="tracking-management" id="tracking-management" style="display: none;">
+      <div class="section-header">
+        <h2>Управление отслеживанием</h2>
+        <button class="btn btn-outline" onclick="showDashboard()">
+          <i class="fas fa-arrow-left"></i>
+          Назад к дашборду
+        </button>
+      </div>
+      
+      <div class="tracking-controls">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="tracking-search" placeholder="Поиск по отслеживаемым пользователям...">
+        </div>
+        <div class="tracking-filters">
+          <select id="priority-filter">
+            <option value="">Все приоритеты</option>
+            <option value="high">Высокий</option>
+            <option value="medium">Средний</option>
+            <option value="low">Низкий</option>
+          </select>
+          <select id="risk-filter">
+            <option value="">Все уровни риска</option>
+            <option value="low">Низкий риск</option>
+            <option value="medium">Средний риск</option>
+            <option value="high">Высокий риск</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="tracking-list" id="tracking-list">
+        <!-- Example tracked user card -->
+        <div class="tracked-user-card medium-risk">
+          <div class="tracked-user-header">
+            <div class="tracked-user-avatar-container">
+              <img src="https://cdn.discordapp.com/embed/avatars/0.png" alt="User Avatar" class="tracked-user-avatar">
+              <div class="tracked-user-status online"></div>
+            </div>
+            <div class="tracked-user-info">
+              <div class="tracked-user-name">asd</div>
+              <div class="tracked-user-tag">#8510</div>
+              <div class="tracked-user-id">1370102381441978510</div>
+            </div>
+          </div>
+          
+          <div class="tracked-user-meta">
+            <span class="meta-item"><i class="fas fa-calendar"></i> Добавлен: 31.08.2025</span>
+            <span class="priority-badge medium">Средний</span>
+            <span class="risk-badge">Риск: 20</span>
+          </div>
+          
+          <div class="tracked-user-stats">
+            <div class="tracked-stat-item">
+              <i class="fas fa-eye"></i>
+              <span class="tracked-stat-label">Просмотры:</span>
+              <span class="tracked-stat-value">0</span>
+            </div>
+            <div class="tracked-stat-item">
+              <i class="fas fa-clock"></i>
+              <span class="tracked-stat-label">Дней:</span>
+              <span class="tracked-stat-value">114</span>
+            </div>
+            <div class="tracked-stat-item">
+              <i class="fas fa-microphone"></i>
+              <span class="tracked-stat-label">Голос:</span>
+              <span class="tracked-stat-value">0ч</span>
+            </div>
+            <div class="tracked-stat-item">
+              <i class="fas fa-comment"></i>
+              <span class="tracked-stat-label">Сообщения:</span>
+              <span class="tracked-stat-value">0</span>
+            </div>
+          </div>
+          
+          <div class="tracked-user-actions">
+            <button class="btn-view-profile" onclick="viewUserProfile('1370102381441978510')">
+              <i class="fas fa-user"></i>
+              Профиль
+            </button>
+            <button class="btn-edit-note" onclick="editUserNote('1370102381441978510')">
+              <i class="fas fa-edit"></i>
+              Заметка
+            </button>
+            <button class="btn-remove-tracking" onclick="removeFromTracking('1370102381441978510')">
+              <i class="fas fa-trash"></i>
+              Убрать
+            </button>
+          </div>
+        </div>
+        
+        <!-- Empty state (hidden by default) -->
+        <div class="tracking-empty-state" id="tracking-empty-state" style="display: none;">
+          <i class="fas fa-users"></i>
+          <h3>Нет отслеживаемых пользователей</h3>
+          <p>Начните отслеживать пользователей, чтобы видеть их здесь</p>
+          <button class="btn btn-primary" onclick="showSearch()">
+            <i class="fas fa-search"></i>
+            Найти пользователя
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settings-panel" style="display: none;">
+      <div class="section-header">
+        <h2>Настройки</h2>
+        <button class="btn btn-outline" onclick="showDashboard()">
+          <i class="fas fa-arrow-left"></i>
+          Назад к дашборду
+        </button>
+      </div>
+      
+      <div class="settings-content">
+        <div class="setting-group">
+          <h3>Внешний вид</h3>
+          <div class="setting-item">
+            <label>Тема</label>
+            <select id="theme-select">
+              <option value="dark">Темная</option>
+              <option value="light">Светлая</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="setting-group">
+          <h3>Уведомления</h3>
+          <div class="setting-item">
+            <label>Включить уведомления</label>
+            <input type="checkbox" id="notifications-toggle">
+          </div>
+        </div>
+        
+        <div class="setting-group">
+          <h3>Язык</h3>
+          <div class="setting-item">
+            <label>Язык интерфейса</label>
+            <select id="language-select">
+              <option value="ru">Русский</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="setting-actions">
+          <button class="btn btn-primary" onclick="saveSettings()">
+            <i class="fas fa-save"></i>
+            Сохранить настройки
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Servers Panel -->
+    <div class="servers-panel" id="servers-panel" style="display: none;">
+      <div class="section-header">
+        <h2>Серверы Discord</h2>
+        <div class="header-actions">
+          <button class="btn btn-outline" onclick="window.discordTracker.loadDemoServers()">
+            <i class="fas fa-database"></i>
+            Загрузить данные
+          </button>
+          <button class="btn btn-outline" onclick="window.discordTracker.forceRefreshServers()">
+            <i class="fas fa-sync-alt"></i>
+            Обновить
+          </button>
+          <button class="btn btn-outline" onclick="showDashboard()">
+            <i class="fas fa-arrow-left"></i>
+            Назад к дашборду
+          </button>
+        </div>
+      </div>
+      
+      <div class="servers-content">
+        <!-- Top Servers Stats -->
+        <div class="servers-stats">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-server"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="total-servers">0</h3>
+              <p>Всего серверов</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="total-members">0</h3>
+              <p>Общий онлайн</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-microphone"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="total-voice">0</h3>
+              <p>В голосовых</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Servers Filters -->
+        <div class="servers-filters">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="servers-search" placeholder="Поиск серверов...">
+          </div>
+          <div class="filter-controls">
+            <select id="sort-servers">
+              <option value="members">По количеству участников</option>
+              <option value="voice">По голосовому онлайну</option>
+              <option value="boosts">По бустам</option>
+              <option value="name">По названию</option>
+            </select>
+            <select id="boost-filter">
+              <option value="">Все уровни бустов</option>
+              <option value="3">Tier 3</option>
+              <option value="2">Tier 2</option>
+              <option value="1">Tier 1</option>
+              <option value="0">Без бустов</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Top Voice Servers -->
+        <div class="top-voice-servers">
+          <h3>Топ серверов по голосовому онлайну</h3>
+          <div class="top-servers-grid" id="top-voice-servers">
+            <!-- Top voice servers will be loaded here -->
+          </div>
+        </div>
+
+        <!-- All Servers -->
+        <div class="all-servers">
+          <h3>Все серверы</h3>
+          <div class="servers-grid" id="servers-grid">
+            <!-- All servers will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Note Modal -->
+  <div id="note-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Добавить заметку</h3>
+        <span class="close" onclick="document.getElementById('note-modal').style.display='none'">&times;</span>
+      </div>
+      <div class="modal-body">
+        <textarea id="note-text" placeholder="Введите заметку о пользователе..." rows="4"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('note-modal').style.display='none'">Отмена</button>
+        <button class="btn btn-primary" id="save-note-btn">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
