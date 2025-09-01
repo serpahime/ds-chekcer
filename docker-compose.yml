@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  discord-tracker:
+    build: .
+    container_name: discord-tracker-pro
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+    env_file:
+      - config.env
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - discord-tracker-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # MongoDB service (optional - you can use external MongoDB)
+  # mongodb:
+  #   image: mongo:6
+  #   container_name: discord-tracker-mongodb
+  #   restart: unless-stopped
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: admin
+  #     MONGO_INITDB_ROOT_PASSWORD: password
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongodb_data:/data/db
+  #   networks:
+  #     - discord-tracker-network
+
+networks:
+  discord-tracker-network:
+    driver: bridge
+
+# volumes:
+#   mongodb_data:

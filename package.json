@@ -1,0 +1,42 @@
+{
+  "name": "discord-tracker-pro-server",
+  "version": "1.0.0",
+  "description": "Backend server for Discord Tracker Pro",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "npm ci --only=production",
+    "prod": "NODE_ENV=production node server.js",
+    "pm2:start": "pm2 start ecosystem.config.js --env production",
+    "pm2:stop": "pm2 stop ecosystem.config.js",
+    "pm2:restart": "pm2 restart ecosystem.config.js",
+    "pm2:status": "pm2 status",
+    "pm2:logs": "pm2 logs discord-tracker-pro",
+    "pm2:monit": "pm2 monit discord-tracker-pro",
+    "docker:build": "docker build -t discord-tracker-pro .",
+    "docker:run": "docker run -p 3000:3000 --env-file config.env discord-tracker-pro",
+    "docker:compose": "docker-compose up --build -d",
+    "docker:stop": "docker-compose down",
+    "deploy:prod": "npm run build && npm run pm2:start",
+    "deploy:docker": "npm run docker:compose"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0",
+    "passport": "^0.6.0",
+    "passport-discord": "^0.1.4",
+    "express-session": "^1.17.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "axios": "^1.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": ["discord", "tracker", "mongodb", "oauth"],
+  "author": "Discord Tracker Team",
+  "license": "MIT"
+}
